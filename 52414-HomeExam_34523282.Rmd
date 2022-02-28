@@ -1,0 +1,684 @@
+---
+title: '52414: Home Exam'
+output:
+  html_document: default
+  pdf_document: default
+date: "July 18th, 2021"
+---
+
+
+
+### Q0.Submission Instructions (Please read carefully)   
+
+The exam will be submitted **individually** by uploading the solved exam `Rmd` and `html` files to the course `moodle`. 
+Please name your files as `52414-HomeExam_ID.Rmd` and `52414-HomeExam_ID.html` where `ID` is replaced by your ID number (do **not** write your name in the file name or in the exam itself).
+The number of points for each sub-question is indicated next to it, with $105$ points overall. The total grade will be at most $100$. 
+
+Once you click on the `moodle` link for the home exam, the exam will start and you have three days (72 hours) to complete and submit it. 
+The exam will be available from July 18th to July 30th. The last submission time is June 30th at 23:59. <br>
+You may use all course materials, the web and other written materials and R libraries. 
+You are NOT allowed to discuss any of the exam questions/materials with other students. 
+
+
+**Analysis and Presentation of Results:**
+
+Write your answers and explanations in the text of the `Rmd` file (*not* in the `code`). <br>
+The text of your answers should be next to the relevant code, plots and tables and refer to them, and not at a separate place at the end. <br>
+You need to explain every step of your analysis. When in doubt, a more detailed explanation is better than omitting explanations. 
+
+Give informative titles, axis names and names for each curve/bar in your graphs. 
+In some graphs you may need to change the graph limits. If you do so, please include the outlier points you have removed in a separate table.  <br>
+Add informative comments explaining your code <br>
+
+Whenever possible, use *objective* and *specific* terms and quantities learned in class, and avoid *subjective* and *general* unquantified statements. For example: <br>
+`Good:` "We see a $2.5$-fold increase in the curve from Jan. 1st to March 1st". <br>
+`Bad:` "The curve goes up at the beginning". <br>
+`Good:` "The median is $4.7$. We detected five outliers with distance $>3$ standard deviations from the median". <br>
+`Bad:` "The five points on the sides seem far from the middle". 
+
+Sometimes `Tables` are the best way to present your results (e.g. when asked for a list of items). Exclude irrelevant
+rows/columns. Display clearly items' names in your `Tables`.
+
+Show numbers in plots/tables using standard digits and not scientific display. 
+That is: 90000000 and not 9e+06.  
+Round numbers to at most 3 digits after the dot - that is, 9.456 and not 9.45581451044
+
+Some questions may require data wrangling and manipulation which you need to 
+decide on. The instructions may not specify precisely the exact plot you should use
+(for example: `show the distribution of ...`). In such cases, you should decide what and how to show the results. 
+
+When analyzing real data, use your best judgment if you encounter missing values, negative values, NaNs, errors in the data etc. (e.g. excluding them, zeroing negative values..) and mention what you have done in your analysis in such cases. 
+
+Required libraries are called in the `Rmd` file. Install any library missing from your `R` environment. You are allowed to add additional libraries if you want. 
+If you do so, *please add them at the start of the Rmd file, right below the existing libraries, and explain what libraries you've added, and what is each new library used for*. 
+
+##############################################################################
+
+
+
+```{r, echo = FALSE, results = 'hide', warning=FALSE, message=FALSE}
+library(ggplot2)
+library(tidyverse)
+library(rvest)
+library(dplyr)
+library(reshape)
+library(data.table)
+library(caTools)
+library(plotly)
+
+options(scipen=999)
+```
+
+<br/><br/>
+
+
+
+## Q1. Two Armies Simulation (45 pt)    
+<img src="https://images.freeimages.com/images/premium/previews/1923/19232816-toy-soldiers-war-concepts.jpg" alt="soldiers" width="300"/>
+
+Consider two armies of $10$ `R` loving statisticians and $10$ `Python` loving statisticians, facing each other in a shootout, fighting to the death over which language is better. 
+
+Once the battle starts, assume that each statistician tries to shoot as fast as she can, where the time until shooting has an exponential distribution with $\lambda=1$. After a shot is fired, the statistician keeps firing, with the time to the next shot again distributed as $exp(1)$. Each statistician keeps shooting until she is shot and killed herself by a statistician from the opposing army, and leaves the battle. The times until shooting the next bullet for all statisticians and all shots are independent. <br>
+At each shot, the statistician chooses as target **uniformly at random** a member from the remaining **living members** of the opposing army. 
+<br>
+The battle keeps going until all persons from one of the armies die, and then the other army is declared the `winner`. 
+Let $X$ be the number of remaining statisticians from the `winner` army when the battle ends. <br>
+Throughout this question, assume that statisticians are **perfect shooters**, and always hit their target (the choice of the target changes however between different sub-questions below).
+
+
+a. (5pt) Describe `in words only` (no code) a simulation strategy to estimate $E[X]$ and $Var(X)$, including how would you simulate a battle between the two armies. <br>
+**Hint:** remember that the exponential distribution has a memoryless property: $Pr(T>t) = Pr(T > t+s | T>s)$, $\forall t, s > 0$. <br>
+You can perform the simulations in this question exactly as described, which may take many minutes to run, or perform **simpler** and **faster** simulations using probabilistic arguments, provided that they are **equivalent** to the description in the question. <br>
+(For example, if you were requested to simulate $n$ i.i.d. $Bernouli(p)$ random variables and report their sum, you could argue that instead it is enough to simulate a single $Bionomial(n,p)$ random variable).
+
+
+
+b. (8pt) Simulate $1,000$ random battles as described in the question and use them to estimate $E[X]$ and $Var(X)$ from the random simulations.  <br>
+It is recommended to write a function for the simulation and call it, such that the simulation function can be used also in the subsequent sub-questions. 
+
+
+c. (8pt) Now, change $n$, the number of statisticians in each army, to be $n=10, 20, 40, ..., 10240$ (each time multiplying $n$ by two), and let $X_n$ be the random variable counting the number of remaining winners when starting with $n$ statisticians in each army. (so the variable $X$ from (a.) corresponds to $X_{10}$). <br>
+For each value of $n$ simulate $100$ random battles and estimate $\mu_n \equiv E[X_n]$. 
+Plot your estimate vs. $n$. <br>
+Find a simple function $f(n)$ such that it holds that $\mu_n \approx f(n)$ based on the plot. 
+(**Hint:** you can use log-scale). 
+
+
+d. (8pt) In this sub-question, assume that all statisticians in both armies have used their programming language too much so they became to hate it, and therefore in each shot they aim and kill a random member from their **own** army (including possibly themselves). <br>
+Modify the simulation to accommodate this case, and repeat the simulation, plot and finding a function $f(n)$ as in (c.) for this case. <br>
+Explain in words the differences in results between the two cases. 
+
+
+e. (8pt) In this sub-question, assume that all statisticians in both armies are **completely drunk**, and shoot randomly one of the **remaining persons alive** (from both armies) including themselves (they still always hit their target).  
+Repeat all the steps of (c.) for this case (as you did in (d.)). Are the results similar or different? why? 
+
+
+f. (8pt) Finally, suppose in this sub-question that statisticians that are shot become zombies instead of being killed, and can still keep shooting at statisticians from the opposing army (as in (a.), (b.)). <br>
+All statisticians aim at and hit a random **living** (non-zombie) member from the opposing army. The battle ends when all members of a certain army become zombies, and then $X_n$ records the number of remaining living (non-zombie) statisticians in the other army. <br>
+Repeat the simulation, plot and finding a function $f(n)$ as in (c.) for this case. <br>
+Explain in words the differences in results between the this and the previous cases. 
+
+
+**Solutions:**
+
+A)According to the battle fastest shooter shoots first and reduce the size of opposite team => we will create two vectors of 10 length, which represents the soldiers from teams. At every loop we chose the fastest soldier in the team (the speed of shooting for every soldier is defined by exp(1)) , he will chose who to shoot from the opposite  army by uniform distribution and we will subsruct from the opposite army one person (reduce the vector by 1) in the current loop. The battle stops when both teams are dead (one of the vectors is 0). We will also keep the time counter for the time shooting of soldier in order to add them and calculate the expactation. Then we will calculate variance - the sum of squared difference between the real value of number and the expected. 
+
+B)
+```{r, error = TRUE}
+###Battle simulation
+battle.simulation = function(soldiers){
+  R_army <- rexp(soldiers,1) #conducting 2 armies
+  P_army <- rexp(soldiers,1)
+  while(length(R_army) > 0 & length(P_army) > 0){ #the exit condition that battle will go on until there are alive soldiers
+    if (min(R_army) < min(P_army)){  #exit condition when one of the armies is fully dead
+      fastes <- rdunif(1,1,length(P_army)) #finds the fastest shooter whose turn is next to come
+      P_army <- P_army[-fastes]
+      R_army[which.min(R_army)] <- R_army[which.min(R_army)] + rexp(1)}
+    else{fastes <- rdunif(1,1,length(R_army)) #counting time for the exact shooter
+      R_army <- R_army[-fastes]
+      P_army[which.min(P_army)] <- P_army[which.min(P_army)] + rexp(1)}}
+  return(max(length(R_army),length(P_army)))}
+
+
+###Running 1000 battles to estimate var and mean
+alive_soldiers <- c()
+for(i in 1:1000){
+  alive_soldiers[i] <- battle.simulation(10) #run the battle 1000 times with 10 soldiers at every army at a time
+  }
+mean_alive <- mean(alive_soldiers)
+var_alive <- var(alive_soldiers)
+cat('The mean is', mean_alive, "The variance is", var_alive)
+
+```
+C)
+```{r, error = TRUE}
+
+#The function for simulating 100 battles for every n of soldier group (also used in the subsequent subtasks)
+vec_1c <- unlist(lapply(0:10, function(i) c(rep(10*2^i)))) #creating vector of n
+mean_vec1c <- c() #mean vector to fill
+res_1c <- c() #counting means of diff soldier
+for(i in 1:length(vec_1c)){
+  res_1c = sapply(1:100, function(index){res_1c[index] <- battle.simulation(vec_1c[i])}) #for each n soldier 100 battles
+  mean_vec1c[i] <-mean(res_1c)} #adding the means
+
+data_1c <- data.frame(n = vec_1c, mean = mean_vec1c) #creating dataframe of mean and it count
+
+#creating the regular plot
+ggplot_1c1 <- ggplot(data= data_1c, aes(x=n,y=mean)) +
+  geom_line() +
+  theme_dark() +
+  ggtitle("Estimated num of winners vs number of winners") + xlab("number of winners ") + ylab("estimated number of winners")
+ggplot_1c1
+
+#do the transformation of log(Y), log(X)
+ggplot_1c2 <- ggplot(data= data_1c, aes(x=log(n),y=log(mean))) +
+  geom_line(col="pink") +
+  theme_dark() +
+  ggtitle("Estimated num of alive vs number of alive within the Log transformations") + 
+  xlab("log(number of alive) ") + ylab("log(estimated number of alive)")
+ggplot_1c2
+
+
+```
+***After we did the required log transformation we can clearly observe linear dependency between expected alive soldiers and simulation one.***
+D)
+```{r, error = TRUE}
+###We will use the code from 1B, however we will add inside the loop condition when the random soldier shoots in his rommate
+battle.simulation_haters = function(soldiers){
+  R_army <- rexp(soldiers,1) #conducting 2 armies
+  P_army <- rexp(soldiers,1)
+  while(length(R_army) > 0 & length(P_army) > 0){ #the exit condition that battle will go on until there are alive soldiers
+    if (min(R_army) < min(P_army)){fastes <- rdunif(1,1,length(R_army))  #adding condition for soldier who shoots in his teammate
+      R_army <- R_army[-fastes]
+      R_army[which.min(R_army)] <- R_army[which.min(R_army)] + rexp(1)}
+    else{fastes <- rdunif(1,1,length(P_army)) #counting time for the exact shooter
+      P_army <- P_army[-fastes]
+      P_army[which.min(P_army)] <- P_army[which.min(P_army)] + rexp(1)}}
+  return(max(length(R_army),length(P_army)))}
+
+
+###Running 1000 battles to estimate vat and mean (func by analogy to 1c)
+alive_soldiers_haters <- c()
+for(i in 1:1000){
+  alive_soldiers_haters[i] <- battle.simulation_haters(10) #run the battle 1000 times with 10 soldiers at every army at a time
+  }
+mean_alive_h <- mean(alive_soldiers_haters)
+var_alive_h <- var(alive_soldiers_haters)
+cat('The mean is', mean_alive_h, "The variance is", var_alive_h)
+
+```
+***We can observe that the mean and variaince bacame smaller comparing to 1B, which does make sense, because now soldiers can shoot their teammates as well, only chosing whom to shoot by uniform distribution.***
+
+```{r, error = TRUE}
+#(func by analogy to 1c) to run 100 for different team size
+data_e<- data.frame(mean_alive_h=round(mean_alive_h,3), var_alive_h=round(var_alive_h,3)) 
+mean_e <- c() #mean vector
+res_e <- c()
+for(i in 1:length(n)){
+  res_e = sapply(1:100, function(index){res_e[index] <- battle.simulation_haters(n[i])}) #running battles
+  mean_e[i] <-mean(res_e)}
+
+data_e <- data.frame(n = n, mean = mean_e)
+
+#Plotting
+ggplot(data_e,aes(log(mean),log(n)))+
+  theme_dark()+
+  geom_point(col="skyblue")+ 
+  ylab("log(mean)")+ 
+  xlab("log(num of soldiers)")+
+  labs(title="Plot of log(mean) vs log(n) for soldiers who shoots each other")
+```
+***We can observe that plot is a random scatter of plots - no correlation. Which does makes sense according to this subtask story. Since the teammates right now shoots each other => the probability that their team will take turn shooting at next loop becomes lower. At the end, the group that starts has a big chances to shoot the opposite team, however it has the same chances to shoot whole their team by themselves. Since the distribution of shooting is distributed uniformly in both teams => both teams has the same prob to win. Thats why the results look a lot similar.***
+
+E)
+```{r,error = TRUE}
+drunk_battle = function(n){
+  R_army <- rexp(n,1)
+  P_army <- rexp(n,1)
+  while(length(R_army) > 0 & length(P_army) > 0){
+    if (min(R_army) < min(P_army)){
+      R_army[which.min(R_army)] <- R_army[which.min(R_army)] + rexp(1)}
+    else{P_army[which.min(P_army)] <- P_army[which.min(P_army)] + rexp(1)}
+       fastest <- rdunif(1,1,length(R_army)+length(P_army))
+    if(fastest>length(R_army)){fastest <- fastest-length(R_army) #every soldier can shoot every soldier
+      P_army <- P_army[-fastest]}
+    else{R_army <- R_army[-fastest]}}
+  return(max(length(R_army),length(P_army)))}
+
+
+results_e <- c()
+for(i in 1:1000){results_e[i] <- drunk_battle(10)}
+mean1e <- mean(results_e) # calculation of the mean.
+var1e <- var(results_e) # calculation of the var.
+data_1e <- data.frame(mean=round(mean1e,3),var=round(var1e,3))
+print(data_1e)
+
+
+#(func by analogy to 1c)
+mean_vec_e <- c() # vector of means
+res_vec_e <- c()
+for(i in 1:length(n)){
+  res_vec_e = sapply(1:100, function(index){res_vec_e[index] <- drunk_battle(n[i])})
+  mean_vec_e[i] <-mean(res_vec_e)}
+
+mean_vec_e <- data.frame(n = n, mean = mean_vec_e)
+
+#Plotting
+ggplot_e<-ggplot(mean_vec_e,aes(n,mean))+
+  geom_point(col="white")+
+  theme_dark()+
+  ylab("log(mean)")+ 
+  xlab("log num of remaining drunk soldiers alive")+
+  ggtitle("Expected mean of drunk soldiers alive vs simulation")
+ggplot_e
+
+
+```
+***We still dont see any correlation, the results are pretty much the same. Since right now soldiers are drunk and can shoot everybody (alomost the same situation as prev subtask where they also randomly chose who to shoot), however it is an equal situation in both teams. The shooter is chosen by uniform destribution and since the teams are the same sizes both teams have equal chances to win.***
+
+F)
+
+```{r, error = TRUE}
+zombie_battle = function(R_soldeirs,P_soldeirs){
+  R_army <- rexp(R_soldeirs,1)
+  P_soldeirs <- rexp(R_soldeirs,1)
+  c1 <- 0 #setting counters for both armies
+  c2 <- 0
+  while(c1 < R_soldeirs & c2 < R_soldeirs){
+    if (min(P_soldeirs) > min(R_army)){
+      c2 <- c2 + 1 #number of zombies in each group
+      suicide<-which.min(R_army) #soldier shoots himsel
+      R_army[suicide] <- R_army[suicide] + rexp(1)}
+    else{
+      c1 <- c1 + 1
+      suicide<-which.min(P_soldeirs)
+      P_soldeirs[suicide] <- P_soldeirs[suicide] + rexp(1)}} #alives
+
+  min_c<-min(c1,c2)
+  return(R_soldeirs - min_c)}
+
+#(func by analogy to 1c)
+zombie_go <- c()
+for(i in 1:1000){zombie_go[i] <- zombie_battle(10,10)} #running the battles
+mean_zombie <- mean(zombie_go) 
+var_zombie <- var(zombie_go)
+zombie_data <- data.frame(Mean=round(mean_zombie,3),Variance=round(var_zombie,3)) #displaying the data of zombie battle
+print(zombie_data, caption= "Mean and Variance of Zombie Battle")
+
+
+#(func by analogy to 1c)
+mean_vec_f <- c() #means vector
+res_f <- c() #results vector
+for(i in 1:length(n)){
+  res_f = sapply(1:100, function(index){res_f[index] <- zombie_battle(n[i])}) #running battles
+  mean_vec_f[i] <-mean(res_f)}
+
+data_1f <- data.frame(n = n, mean = mean_vec_f)
+
+#Plotting
+ggplot_f1 <- ggplot(data= data_1f, aes(x=n,y=mean)) +
+  geom_line(col='yellow') +
+  theme_dark() + 
+  labs(title="Plot of mean vs zombie soldiers") + xlab("zombie soldiers") + ylab("Mean")
+ggplot_f1
+
+
+#Now we will consider the transformation of Y=X^2
+ggplot_f2 <- ggplot(data= data_1f, aes(x=n,y=mean^2)) +
+  geom_line(col='orange') +
+  theme_dark() + 
+  labs(title="Plot of mean squared vs zombie soldiers") + xlab("zombie soldiers") + ylab("Mean^2")
+ggplot_f2
+```
+***Now we can observe little increase in var, since zombie can shoot even after being shot. The initial plot does not explain the dependence in adequate way => we did the squared transformation of Y, so now we can see dependancy that closed to linear.***
+
+
+
+## Q2. Analysis and Visualization of Twitter Data (60 pt)    
+
+<img src="https://cdn-0.therandomvibez.com/wp-content/uploads/2018/12/Jokes-On-New-Years-Resolution.jpg" alt="resolutions" width="300"/>
+
+
+a. (4pt) Download and read the tweets dataset file `New-years-resolutions-DFE.csv` available [here](https://github.com/DataScienceHU/DataAnalysisR_2021/blob/master/New-years-resolutions-DFE.csv). 
+The data represents new year's resolutions tweets by American users wishing to change something in their life at the start of the year $2015$, downloaded from [here](https://data.world/crowdflower/2015-new-years-resolutions#). <br>
+Make sure that the tweets `text` column has `character` type. 
+Show the top and bottom two rows of the resulting data-frame. 
+
+
+b. (5pt) The class `times` from the library `chron` stores and displays times in the above format `Hours:Minutes:Seconds`, but also treats them as numeric values between zero and one in units of days. For example, the time `10:48:00` corresponds to the value: $(10 + 48/60)/24 = 0.45$. <br>
+Create a new column with tweet times, of class `times`, with the time of the day for each tweet, in the above format. For example, the first entry in the column corresponding to the time of the first tweet should be: `10:48:00`. <br>
+Make a histogram showing the number of tweets in every hour of the $24$ hours in a day (that is, the bins are times between `00:00` and `00:59`, between `01:00` and `01:59` etc.). <br>
+At which hours do we see the most/fewest tweets?
+
+
+c. (6pt) Plot the distribution of tweets `text` lengths (in characters) made by `females` and `males` separately. Who writes longer tweets? <br>
+Repeat, but this time plot the tweets lengths distribution for tweets in the four different regions of the US
+(`Midwest`, `Northeast`, `South` and `West`). Report the major differences in lengths between regions. <br>
+Finally, show the tweets lengths distribution for tweets for the $10$ different categories given in `Resolution_Category`. Report the major differences in lengths between categories. 
+
+
+d. (8pt) Compute the number of occurrences of each word in the `text` of all the tweets. Ignore upper/lower case differences. <br>
+Remove all common stop words (use the command `stop_words` from the tidytext package). <br>
+Remove words containing the special characters: `#`, `@`, `&`, `-`, `.`, `:` and `?`. <br>
+Remove also non-informative words: `resolution`, `rt`, `2015` and the empty word. <br>
+Plot the top $100$ remaining words in a word cloud, using the `wordcloud2` package. <br>
+
+
+e. (8pt) Find for each of the top (most frequent) $100$ words from 2.(d.) and each of the $10$ tweet categories, the fraction of tweets from this category where the word appears, and list them in a $100 \times 10$ table $F$, with $f_{ij}$ indicating the frequency of word $i$ in category $j$. <br>
+That is, if for example there were $200$ tweets in the category `Humor`, and $30$ of them contained the word `joke`, then the frequency was $0.15$. <br>
+Finally, for each of the $10$ categories we want to find the most `characteristic` words, i.e. words appearing more frequently in this category compared to other categories: <br>
+Formally, compute for each word $i$ and each category $j$ the difference between the frequency in the category and the maximum over frequencies in other categories: $d_{ij} = f_{ij} - \max_{k \neq j} f_{ik}$.
+(For example, if the word `joke` had frequency $0.15$ in `Humor`, and the next highest frequency for this word in other categories is $0.1$, then the difference for this word is $0.05$).
+Find for each category $j$ of the $10$ categories the $3$ `characteristic` words with the highest differences $d_{ij}$. Show a table with the $10$ categories and the $3$ `characteristic` words you have found for each of them. Do the words make sense for the categories? 
+
+
+f. (5pt) Plot the number of tweets in each of the $10$ categories shown in `Resolution_Category`. <br>
+Next, compute and show in a table of size $10 \times 4$ the number of tweets for each of the $10$ categories from users in each of the four regions of the USA: `Midwest`, `Northeast`, `South` and `West`. 
+
+
+
+g. (8pt) We want to test the null hypothesis that users in different `regions`  have the same distribution over `categories` for their resolutions, using the Pearson chi-square statistic: 
+$$
+S = \sum_{i=1}^{10} \sum_{j=1}^{4} \frac{(o_{ij}-e_{ij})^2}{e_{ij}}
+$$
+where $o_{ij}$ is the number of tweets on category $i$ from region $j$ computed in the table in the previous sub-question, assuming some indexing for the categories and regions (for example, $j=1,2,3,4$ for `Midwest`, `Northeast`, `South` and `West`, respectively, and similarly for the categories). The expected counts $e_{ij}$ are given by: 
+$$
+e_{ij} = \frac{o_{ \bullet j} o_{i \bullet}  }  {o_{\bullet \bullet}}
+$$
+where $o_{i \bullet}$ is the sum over the $i$'th row (over all regions), $o_{\bullet j}$  the sum over the $j$'th column (over all categories) and $o_{\bullet \bullet}$ the sum over all observations in the table. These expected counts correspond to independence between the row (categories) and column (regions) according to the null hypothesis. <br>
+Compute and report the test statistic for the table computed in 2.(f). <br>
+Use the approximation $S \sim \chi^2(27)$ to compute a p-value for the above test (there are $(4-1) \times (10-1) = 27$ degrees of freedom). Would you reject the null hypothesis? <br>
+Finally, repeat the analysis (computing a table, $\chi^2$-statistic and p-value) but this time split tweets by `gender` (`male` and `female`) instead of by `region`, to get a $10 \times 2$ table. Is there a significant difference in the distribution of categories between males and females?
+
+
+h. (8pt) Use the following simulation to create a randomized dataset of `(category, region)` pairs for the tweets: <br>
+For each tweet in the dataset keep the real `category` (from the column `Resolution_Category`) but change the `region` randomly by shuffling (permuting) the regions column in a random order, such that the total number of tweets from each region remains the same. <br>
+Repeat this simulation $N=1,000$ times, each time creating a new shuffled random data, with the `category` column remaining the same and the `region` column shuffled each time in a random order. 
+For each such simulation indexed $i$ compute the `category`-by-`region` occurance table and the resulting $\chi^2$ test statistic from 2.(g.) and call it $S_i$. <br>
+Plot the empirical density distribution of the $S_i$ randomized test statistics and compare it to the theoretical density of the $\chi^2(27)$ distribution. Are the distributions similar? <br>
+Finally, compute the empirical p-value, comparing the test statistic $S$ computed on the real data in 2.(g.) to the $1,000$ random statistics:  
+$$
+\widehat{Pval} = \frac{1}{N} \sum_{i=1}^N 1_{\{S_i \geq S\}}.
+$$
+How different from the p-value obtained via the chi-square approximation? 
+
+
+i. (8pt) Compute for each of the $50$ states (and `DC` - District of Columbia) in the US the number of tweets made by users from this state. <br>
+Next, load the `usmap` library that contains the variable `statepop`. <br>
+Use this variable to compute the number of tweets per million residents for each state. <br>
+Remove `DC` and use the `usmap` package to make a map of USA states, where each state is colored by the number of tweets per million residents. <br>
+Report the three states with the maximal and minimal number. 
+
+
+
+**Solutions:**
+
+```{r, echo = FALSE, results = 'hide', warning=FALSE, message=FALSE}
+library(stringr)
+library(tidyr)
+library(tidyverse)
+library(tidytext) 
+library(dplyr)
+library(reshape2)
+library(chron) # for dealing with times 
+library(wordcloud2) # package for drawing word-cloud
+library(usmap) # Show USA map 
+
+###for ggpolts
+library(ggthemes) 
+library(ggplot2)
+theme_set(theme_tufte())
+library(rlang)
+
+
+```
+
+
+A)
+```{r, error = TRUE}
+resol <- read.csv("New-years-resolutions-DFE.csv", stringsAsFactors = F, fileEncoding = 'latin1')
+print(class(resol$text)) #making sure its in character
+head(resol,2) #top 2
+tail(resol,2) #bottom 2
+```
+B)
+``` {r, error = TRUE}
+#creating a new column for the changed time
+resol <- mutate(resol, time_created = resol$tweet_created) #new column with tweets time
+print(class(resol$time_created)) #check the format
+resol$time_created <- as.times(format(as.chron(resol$time_created, "%m/%d/%Y %H:%M"),format = "%H:%M:%S")) #convert to the right time format
+
+resol <- mutate(resol, time_created = resol$tweet_created)
+
+#using chron function in order to change into the correct time format
+resol$time_created <- as.times(format(as.chron(resol$time_created, "%m/%d/%Y %H:%M"),format = "%H:%M:%S"))
+
+
+#Creating a histogram
+hist(hours(resol$time_created), breaks=24, main="Tweets Distribution Per Day",ylab = "Number of tweets", xlab = "Hour of the day" ,col='#e4c7f1', ylim = c(0,550), xlim = c(0,24))
+
+
+```
+
+*** According to histogram the tweet boom is between 9.00-10.00 p.m***
+C) ***Tweets length Distribution within gender.***
+```{r, error = TRUE}
+resol$text_len<-nchar(resol$text)
+
+ggplot(data = resol,aes(x=gender,y = text_len, col=gender))+
+  geom_tufteboxplot()+
+  theme(axis.text.x = element_text(angle=65, vjust=0.6))+
+  theme(legend.position="none") +
+  xlab("Gender")+
+  ylab("Tweet length")+
+  coord_flip()+
+  labs(title="Tweets distribution within different gender")
+
+```
+***From the barplot we can see that om average women tweets are longer***
+
+***Tweets length Distribution within region***
+```{r, error = TRUE}
+ggplot(data = resol,aes(x=tweet_region,y = text_len, col=tweet_region))+
+  geom_tufteboxplot()+
+  theme(axis.text.x = element_text(angle=65, vjust=0.6))+
+  theme(legend.position="none") +
+  xlab("Region")+
+  ylab("Tweet length")+
+  coord_flip()+
+  labs(title="Tweets distribution within different region")
+```
+***We can see that West, South and North people post approximately yhe same amount of tweets, and also this parts have a bigger number of tweets that Midwest***
+
+***Tweets length Distribution within Resolution_Category***
+```{r, error = TRUE}
+ggplot(data = resol,aes(x=Resolution_Category,y = text_len, col=Resolution_Category))+
+  geom_tufteboxplot()+
+  theme(axis.text.x = element_text(angle=65, vjust=0.6))+
+  theme(legend.position="none") +
+  xlab("Resolution Category")+
+  ylab("Tweet length")+
+  coord_flip()+
+  labs(title="Tweets distribution within different region")
+```
+***From the analysis of the above barplot we can understand that on average people are tend to post Philanthropic resolutions, the next popular categories are, paradoxically Career and Finance. The least popular categorie for resolutions is Humor.***
+D)
+```{r, error = TRUE}
+#organizing the text for further cleaning
+text <- sort(table(unlist(strsplit(tolower(resol$text), " "))), decreasing = TRUE)
+
+#creating the dataframe with all the words,expressions,numbers and etc and their frequency
+word_freq <- setNames(data.frame(text), c("word", "count")) %>% anti_join(stop_words, by = "word")
+
+#removing punctuation marks
+word_freq <- word_freq[!str_detect(pattern =  "#|@|&|\\.|-|:|\\?|\\s|\\d|\\!", string = word_freq$word),] 
+word_freq$word <-  str_replace_all(word_freq$word,"[^[:alnum:]]", "") 
+
+#removing words that were used as a "topic" words, hashtags
+word_freq <- word_freq %>% filter(!word_freq$word %in% c("resolution","rt","2015"))
+
+#deleting rows with empty word column
+word_freq <- word_freq[!apply(word_freq, 1, function(x) any(x=="")),] 
+
+#Creating cloud
+wordcloud2(word_freq[1:100,], size = 0.7, shape = 'pentagon')
+
+```
+***As we can see the most popular word was "stop" (probably in the context of stop doing smth like smoking, judging - which does make sense as a New Year resolution), then goes "time", "people", "start".***
+E)
+```{r, error = TRUE}
+cat_freq<-c(0,0,0,0,0,0,0,0,0,0) #creating the new dataframe to fill it with the frequency of appearances
+word_unique<-c(unique(resol$Resolution_Category)) #filling it with unique words
+for(i in 1:10){
+  for(j in 1:5011){
+    if(word_unique[i]==resol$Resolution_Category[j]){ #adding to the count
+      cat_freq[i]<-cat_freq[i]+1
+    }
+  }
+}
+cat_num<-data.frame("Resolution_Category"=word_unique,"number"=cat_freq) #creating new dataframe
+
+
+
+###Creation of empty dataframe where columns are Resolution_Categories and rows are all of words that were in every Resolution_Category
+data_2e <- data.frame(matrix(0, nrow =100, ncol = 10)) # creating dataframe within categories as rows and words as columns
+
+
+top_top<-unique(word_freq$word)[1:100]
+data_2e <- setNames(data_2e, as.vector(cat_num$Resolution_Category)) #filling columns with category names
+rownames(data_2e) <- as.vector(top_top) # naming rows with popular words from 2d
+
+
+###Filling in the above dataframe with frequencies of the words
+for(a in 1:10){
+  for(b in 1:100){
+    c=0
+    for(tweets in 1:5011){
+      if((grepl(row.names(data_2e)[b], resol[tweets,7], fixed = TRUE)) & (resol[tweets,5] == colnames(data_2e)[a])){
+        c = c+1}}
+    count_e<- c/cat_num[a,2]
+  data_2e[b,a] <-count_e}}
+
+
+data_buff<-data_2e #creating the buff dataframe to save the initial one for calculation
+
+
+max_vec<-c()
+for(i in 1:10){max_temp<-max(data_buff[,i]) #removing the max
+  max_vec<-c(max_vec,max_temp)}
+for(i in 1:10){
+  data_buff[,i]<-data_buff[,i]-max_vec[i]}
+
+
+dif <- data_2e-data_buff
+dif<-abs(dif)
+for(i in 1:10){
+  top_chart<-top_n(dif,3, dif[i])
+  print(top_chart[i])} #printing tops
+  
+
+```
+***We checked the distance, from the tables we can see that words that dont belong to the precise category has the biggest distance(they are meaningless in this category), and words within the category have the smallest distance, because they connected to the topuc of category. Which does makes common sense.***
+
+F)
+```{r, error = TRUE}
+#Plotting the categories and tweets
+category_freq <- resol %>% group_by(Resolution_Category) %>% summarise(number = n()) #
+gg1<-ggplot(category_freq, aes(x=Resolution_Category, y=number, color = Resolution_Category, fill = Resolution_Category)) +
+  geom_bar(stat = "identity")+ 
+  theme(axis.text.x = element_text(angle = 35, hjust = 1, size = 9)) +
+  xlab("Resolution_Category")+ 
+  ylab("Number of Tweets")+ 
+  ggtitle(label="")+
+  geom_text(aes(y=number+100, label = number), lwd = 5, show.legend = F)
+  
+gg1+scale_fill_viridis_d(option = 'C', direction=-1)
+
+
+
+#Next, computing and showing in a table of size 10*4 the number of tweets for each of the 10 categories from users in each of the four regions of the USA: `Midwest`, `Northeast`, `South` and `West`
+
+region_freq <- table(resol$Resolution_Category, resol$tweet_region) # by table we can show 
+print(region_freq,caption= "Tweets number for each category across 4 regions of the USA")
+```
+
+G)
+```{r, error = TRUE}
+#P_val test
+chisq.test(region_freq)
+```
+***P_value>0.5>0.1 => we do not reject the null hypothesis***
+
+```{r}
+#Do the same but for categories and gender
+gender_freq  <- table(resol$Resolution_Category,resol$gender)
+print(gender_freq ,caption= "Tweets number for each category among different genders")
+
+#P_val test
+chisq.test(gender_freq)
+```
+***P_value<<0.05 => we reject the null hypothesis***
+
+***It is assumed that if the null hypothesis is true, then the distribution of this statistic is known - that is our first case with regions. However, in the second case with genders we reject the null hypothesis - meaning its untenable and we reject it in favor of an alternative hypothesis.***
+
+H)
+```{r, error = TRUE}
+#Creating function that will randomize different sets of categories with regions 
+randomazing_func <- function(){reg_freq <- resol$tweet_region
+  buff2 <- resol #copying our dataframe not to change the initial
+  num<-rownames(resol) 
+  sum_num<-length(num)
+  vec<-seq(sum_num)
+  for(i in vec){
+    buff2[i,15] <- reg_freq[rdunif(1,1,length(reg_freq))] #shuffles the regions
+    full_table <- reg_freq[-rdunif(1,1,length(reg_freq))]}
+  final_table <- table(buff2$Resolution_Category,buff2$tweet_region)
+  chi_test<-chisq.test(final_table)$statistic
+  return(chi_test)}
+
+
+#calling the randomazing function
+vec_to_fill <- c()
+for(i in 1:1000){
+  vec_to_fill[i]<-randomazing_func()}
+
+
+ 
+#Plotting to compare qchisq and simulation distribution
+vec_to_fill<-as.data.frame(vec_to_fill)
+ggplot(data = vec_to_fill,aes(x=vec_to_fill))+
+  geom_density(fill='#fef6b5')+
+  xlab("dchisq  simulation distribution")+
+  ggtitle('Comparison of theoretical dchisq with the simulation dchisq, df=27' )+
+  stat_function(fun = dchisq, args = list(df = 27),col='#2a5674') +
+  geom_text(x=45, y=0.04, label="dchisq Distribution",size = 5, color = "#2a5674") + 
+  geom_text(x=50, y=0.03, label="Simulation \n distribution",size = 5, color = "#fef6b5")
+  
+
+```
+***After running 1000 iteration we can see that the simulation is very closed to chi squared distribution with 27 degrees of freedom. It does make sense, because using the law of big numbers we know that after doing loop on a big scale,consequently, it will get close to the original distribution line.***
+
+I)
+```{r, error = TRUE}
+tweets_state <- resol %>% count(tweet_state) #number of tweets in every state
+per_mil <- statepop$pop_2015/1000000 #calculating tweets per million
+colnames(tweets_state) <- c("abbr", "number") #give the name to colamnes
+US_data <- full_join(statepop, tweets_state, by="abbr") #uniting for one dataframe
+US_data <- mutate(US_data, per_mil = US_data$number/per_mil) #adding the colamn per million to the dataframe
+
+###Plotting
+plot_usmap(data = US_data,values = "per_mil", exclude = "DC", labels = TRUE)+
+  labs(title = "Tweets per million in every State")+
+  scale_fill_continuous(name = "Rate of Tweets per million in every State", label = scales::comma, low="white", high='darkgreen')+
+  theme(legend.position = "right")
+
+###MAX and MIN tweets per million
+US_rate <- US_data[order(US_data$per_mil,decreasing = T),]
+print("States with MAX amount of tweets per million")
+head(US_rate,3) #states with MAX amount of tweets per million
+
+print("states with MAX amount of tweets per million")
+tail(US_rate,3) #states with MIN amount of tweets per million
+
+```
+
